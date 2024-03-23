@@ -1,0 +1,726 @@
+﻿@model ASPNETCore8SerilogDemo.Models.ProductViewModel
+
+@{
+    ViewData["Title"] = "產品建立";
+}
+
+@*<h1>產品建立</h1>
+
+    <h4>ProductViewModel</h4>
+    <hr />*@
+
+<div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-6">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Id" class="control-label"></label>
+                <input asp-for="Id" class="form-control" />
+                <span asp-validation-for="Id" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OrderQty" class="control-label"></label>
+                <input asp-for="OrderQty" class="form-control" title="合法值為 1~ 10" />
+                <span asp-validation-for="OrderQty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UnitPrice" class="control-label"></label>
+                <input asp-for="UnitPrice" class="form-control" title="合法值為 1~ 1000" />
+                <span asp-validation-for="UnitPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="新增(Submit)" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+    <div class="col-md-3">
+    </div>
+</div>
+
+<!-- jsonResult row -->
+<div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-6">
+        <pre><code id="jsonResult"></code></pre>
+    </div>
+    <div class="col-md-3">
+    </div>
+</div>
+
+<!-- button row -->
+<div class="row">
+    <div class="col-md-1">
+    </div>
+    <div class="col-md-10">
+        <button class="btn btn-primary" id="btnCreateAjaxForm">新增(AJAX)(Form)</button>
+        <button class="btn btn-primary" id="btnCreateAjaxJson">新增(AJAX)(JSON)</button>
+        <button class="btn btn-primary" id="btnCreateAjaxJsonSuccess">新增(AJAX)(JSON)(成功)</button>
+        <button class="btn btn-secondary" id="btnParamNullException">參數值為空白</button>
+        <button class="btn btn-secondary" id="btnOutRangeException">參數值超出範圍</button>
+        <button class="btn btn-secondary" id="btnDataExistException">資料已存在</button>
+        <button class="btn btn-secondary" id="btnDataNotExistException">資料不存在</button>
+        <button class="btn btn-danger" id="btnIOException">內部伺服器例外</button>
+        <button class="btn btn-primary" id="btnAntiForgoryOkByAjaxForm">AntiForgory成功(AJAX)(FORM)</button>
+        <button class="btn btn-primary" id="btnAntiForgoryOkByAjaxJson">AntiForgory成功(AJAX)(JSON)</button>
+        <button class="btn btn-secondary" id="btnAntiForgoryNgByAjaxJson">AntiForgory失敗(AJAX)(JSON)</button>
+    </div>
+    <div class="col-md-1">
+    </div>
+</div>
+
+<!-- button row -->
+<div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-6">
+        <pre> 
+[新增(AJAX)(Form)]: contentType='application/x-www-form-urlencoded'  
+[新增(AJAX)(JSON)]: contentType='application/json'  
+上述2者都會發生 Model Validation Error, 會在 Controller/Action 裡重新包裝為 MyClientException 抛出
+[AntiForgory失敗(AJAX)(JSON)]: 
+* Post 的資料不含 __RequestVerificationToken 隱藏欄位.
+* 這個錯誤不會抛出任何例外, 所以不會被 ExceptionHandlingMiddleware 攔截到, 要特別留意.
+        </pre>
+    </div>
+    <div class="col-md-3">
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+
+    <script type="text/javascript">
+
+        //==== 頁面初始 ====
+        //#region
+        $().ready(function () {
+            // makeInvalidProductObject ==>
+            $("#btnCreateAjaxForm").click(function () {
+                btnCreateAjaxForm();
+            });
+            $("#btnCreateAjaxJson").click(function () {
+                btnCreateAjaxJson();
+            });
+            $("#btnCreateAjaxJsonSuccess").click(function () {
+                btnCreateAjaxJsonSuccess();
+            });
+            // makeProductObject
+            $("#btnParamNullException").click(function () {
+                btnParamNullException();
+            });
+            $("#btnOutRangeException").click(function () {
+                btnOutRangeException();
+            });
+            $("#btnDataExistException").click(function () {
+                btnDataExistException();
+            });
+            $("#btnDataNotExistException").click(function () {
+                btnDataNotExistException();
+            });
+            $("#btnIOException").click(function () {
+                btnIOException();
+            });
+            $("#btnAntiForgoryOkByAjaxForm").click(function () {
+                btnAntiForgoryOkByAjaxForm();
+            });
+            $("#btnAntiForgoryOkByAjaxJson").click(function () {
+                btnAntiForgoryOkByAjaxJson();
+            });
+            $("#btnAntiForgoryNgByAjaxJson").click(function () {
+                btnAntiForgoryNgByAjaxJson();
+            });
+        });
+        //#endregion
+
+        //==== 建立一個無法通過檢核的 Product 物件 (Ajax 使用) ====
+        //#region
+        function makeInvalidProductObject() {
+            // ModelValidation by Attribute
+            $('#Name').val('法式文青彩繪風格費南雪');
+            $('#OrderQty').val(-1);
+            $('#UnitPrice').val(30);
+            //// ModelValidation by UserCode (for UnitPrice)
+            //$('#Name').val('費南雪');
+            //$('#OrderQty').val(1);
+            //$('#UnitPrice').val(-1);
+            let id = parseInt($('#Id').val());
+            let name = $('#Name').val();
+            let orderQty = parseInt($('#OrderQty').val());
+            let unitPrice = parseInt($('#UnitPrice').val());
+
+            let product = {
+                Id: id,
+                Name: name,
+                OrderQty: orderQty,
+                UnitPrice: unitPrice,
+            };
+            return product;
+        }
+        //#endregion
+
+
+        //==== 建立一個可通過檢核的 Product 物件 (Ajax 使用) ====
+        //#region
+        function makeProductObject() {
+            $('#Name').val('費南雪');
+            $('#OrderQty').val(1);
+            $('#UnitPrice').val(30);
+            let id = parseInt($('#Id').val());
+            let name = $('#Name').val();
+            let orderQty = parseInt($('#OrderQty').val());
+            let unitPrice = parseInt($('#UnitPrice').val());
+
+            let product = {
+                Id: id,
+                Name: name,
+                OrderQty: orderQty,
+                UnitPrice: unitPrice,
+            };
+            return product;
+        }
+        //#endregion
+
+        //==== 清除 JSON 區域 ====
+        //#region
+        function clearJsonResult() {
+            var jsonResult = $('#jsonResult');
+            //jsonResult.text('');
+            jsonResult.empty();
+        }
+        //#endregion
+
+        //==== btnCreateAjaxForm ====
+        //#region
+        function btnCreateAjaxForm() {
+            let product = makeInvalidProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("CreateAjaxForm", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                // contentType: 'application/x-www-form-urlencoded',
+                data: $('form').serialize(), // Convert the form content to a string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnCreateAjaxJson ====
+        //#region
+        function btnCreateAjaxJson() {
+            let product = makeInvalidProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("CreateAjaxJson", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+
+        //==== btnCreateAjaxJson ====
+        //#region
+        function btnCreateAjaxJsonSuccess() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("CreateAjaxJsonSuccess", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                    let prettyJson = JSON.stringify(response, null, 4);
+                    $("#jsonResult").text(prettyJson);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+
+        //==== btnParamNullException ====
+        //#region
+        function btnParamNullException() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("OccursParamNullException", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnOutRangeException ====
+        //#region
+        function btnOutRangeException() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("OccursOutRangeException", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnDataExistException ====
+        //#region
+        function btnDataExistException() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("OccursDataExistException", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+       //==== btnDataNotExistException ====
+        //#region
+        function btnDataNotExistException() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("OccursDataNotExistException", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            // 美化 <code></code> 的內容
+            hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnIOException ====
+        //#region
+        function btnIOException() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("OccursIOException", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnAntiForgoryOkByAjaxForm ====
+        //#region
+        function btnAntiForgoryOkByAjaxForm() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("AntiForgoryOkByAjaxForm", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                // contentType: 'application/x-www-form-urlencoded',
+                data: $('form').serialize(), // Convert the form content to a string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnAntiForgoryOkByAjaxJson ====
+        //#region
+        function btnAntiForgoryOkByAjaxJson() {
+            let product = makeProductObject();
+            let token = $('input[name="__RequestVerificationToken"]').val();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("AntiForgoryOkByAjaxJson", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                headers: {
+                    // Send the anti-forgery token in the request headers.
+                    // 名稱可以為: RequestVerificationToken 或 X-CSRF-TOKEN
+                    'RequestVerificationToken': token 
+                },
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                    let prettyJson = JSON.stringify(response, null, 4);
+                    $("#jsonResult").text(prettyJson);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+        //==== btnAntiForgoryNgByAjaxJson ====
+        //#region
+        function btnAntiForgoryNgByAjaxJson() {
+            let product = makeProductObject();
+            clearJsonResult();
+
+            $.ajax({
+                url: '@Url.Action("AntiForgoryNgByAjaxJson", "Product")', // Replace 'YOUR_ENDPOINT_URL' with the URL you're posting to
+                type: 'POST',
+                contentType: 'application/json', // This tells the server that you're sending JSON data
+                data: JSON.stringify(product), // Convert the person object to a JSON string
+                success: function (response) {
+                    // Handle success
+                    console.log('Success:', response);
+                    let prettyJson = JSON.stringify(response, null, 4);
+                    $("#jsonResult").text(prettyJson);
+                },
+                error: function (xhr, status, error) {
+                    // 真正有用的, 只有 xhr 物件 !!!
+                    try {
+                        // 將回傳的錯誤內容, 轉換為 errorJson 物件
+                        var errorJson = JSON.parse(xhr.responseText);
+
+                        // 呈現完整 json 內容
+                        console.log('Error JSON:', errorJson);
+
+                        // 只取其中部份的 json 欄位
+                        console.log('Title:', errorJson.Title);
+                        console.log('Detail:', errorJson.Detail);
+
+                        // Pretty-print the JSON error object to make it readable
+                        // with a spacing of 4 characters for indentation, making it more readable.
+                        var prettyErrorJson = JSON.stringify(errorJson, null, 4);
+
+                        // Set the pretty-printed JSON as the text content of the #jsonResult element
+                        $('#jsonResult').text(prettyErrorJson);
+                    } catch (e) {
+                        console.log('Error parsing error response:', e);
+                        $('#jsonResult').text('發生無法識別的的警告或錯誤. \r\n錯誤代碼: ' + xhr.status + '\r\n錯誤訊息:' + xhr.responseText);
+                    }
+                }
+            });
+
+            //// 美化 <code></code> 的內容
+            //hljs.highlightAll();
+        }
+        //#endregion
+
+    </script>
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
