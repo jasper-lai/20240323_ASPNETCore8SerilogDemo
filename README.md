@@ -45,7 +45,7 @@
 &nbsp;&nbsp;&nbsp;(七) [建立一層 LoggingService 打包 ILogger, 以利寫入資料庫欄位](#section7_7)  
 八. [關於 Serilog 的增強器 (Enrichers)](#section8)  
 
-目前 GitHub 上的範例版本為最後一版, 請自行下載參考.   
+範例存放於 GitHub, 有興趣的朋友, <a href="https://github.com/jasper-lai/20240323_ASPNETCore8SerilogDemo" target="_blank">可自行下載參考</a>.  
 
 <!--more-->
 
@@ -1303,3 +1303,68 @@ builder.Host.UseSerilog();
 * <a href="https://marcus116.blogspot.com/2019/05/netcore-serilog-events-types-enrichers.html" target="_blank">9.. [NETCore] 結構化日誌 Serilog - Events Types 和 Enrichment</a>  
 
 * <a href="https://www.ctrlaltdan.com/2018/08/14/custom-serilog-enrichers/" target="_blank">10.. Creating custom serilog enrichers</a>  
+
+* <a href="https://docs.datalust.co/docs/data-store" target="_blank">11.. (Seq) Data Store</a>  
+> **The Metastore**: contains configuration data such as users, signals, dashboards, and so on. Native (embedded storage in the **Documents/** subfolder under Seq's local storage root). This is the default option for Seq installs and doesn't rely on any external database or storage technologies.    
+> **The Event Store**: contains the application log data that is searchable in the Seq UI. The event store persists data in the **Stream/** directory under Seq's local storage root.   
+
+筆者補充(2024.03.25): **如何進入 container 查看相關的資料夾及檔案結構?**  
+
+```powershell
+PS D:\Temp> docker exec -it seq bash 
+```
+
+```bash
+# cd /data
+# ls -al
+total 32
+drwxr-xr-x 7 root root 4096 Mar 25 03:03 .
+drwxr-xr-x 1 root root 4096 Mar 11 06:34 ..
+drwxr-xr-x 2 root root 4096 Mar 25 03:03 Backups
+drwxr-xr-x 2 root root 4096 Mar 25 02:23 Documents
+drwxr-xr-x 2 root root 4096 Mar 11 06:34 Init
+drwxr-xr-x 2 root root 4096 Mar 25 02:23 Logs
+-rw-r--r-- 1 root root 2186 Mar 25 02:23 Seq.json
+drwxr-xr-x 2 root root 4096 Mar 25 02:43 Stream
+# ls -al Backups
+total 20
+drwxr-xr-x 2 root root 4096 Mar 25 03:03 .
+drwxr-xr-x 7 root root 4096 Mar 25 03:03 ..
+-rw-r--r-- 1 root root 9344 Mar 25 03:03 seq_20240325.seqbac
+# ls -al Logs
+total 568
+drwxr-xr-x 2 root root   4096 Mar 25 02:23 .
+drwxr-xr-x 7 root root   4096 Mar 25 03:03 ..
+-rw-r--r-- 1 root root  81969 Mar 11 09:11 seq-20240311.log
+-rw-r--r-- 1 root root  64982 Mar 12 09:06 seq-20240312.log
+-rw-r--r-- 1 root root  33544 Mar 14 09:16 seq-20240314.log
+-rw-r--r-- 1 root root  50795 Mar 15 09:13 seq-20240315.log
+-rw-r--r-- 1 root root  80574 Mar 16 13:39 seq-20240316.log
+-rw-r--r-- 1 root root   6943 Mar 17 02:53 seq-20240317.log
+-rw-r--r-- 1 root root 189137 Mar 19 09:26 seq-20240319.log
+-rw-r--r-- 1 root root  19531 Mar 25 03:08 seq-20240325.log
+
+# ls -al Documents
+total 100
+drwxr-xr-x 2 root root  4096 Mar 25 02:23 .
+drwxr-xr-x 7 root root  4096 Mar 25 03:03 ..
+-rw-r--r-- 1 root root   782 Mar 25 02:23 metastore.2.metadata
+-rw-r--r-- 1 root root     8 Mar 11 06:34 metastore.collection.561b552d29b849fea3a926001b28d507.docc
+-rw-r--r-- 1 root root 80322 Mar 25 02:36 metastore.collection.c4f86f07cff148209386011ea284a0d7.docc
+-rw-r--r-- 1 root root     8 Mar 11 06:34 metastore.flare
+
+# ls -al Stream
+total 128
+drwxr-xr-x 2 root root  4096 Mar 25 02:43 .
+drwxr-xr-x 7 root root  4096 Mar 25 03:03 ..
+-rw-r--r-- 1 root root   543 Mar 25 02:43 stream.08dc458cd7eae000_08dc47e7ebde4e00.ed3041b2faf247ada4dbd6f08c3d4fcb.index
+-rw-r--r-- 1 root root 47171 Mar 25 02:33 stream.08dc458cd7eae000_08dc47e7ebde4e00.fb8790661cbd4816b852841a57a5d44c.span
+-rw-r--r-- 1 root root   277 Mar 25 02:43 stream.08dc47ee7cb82800_08dc47f58abd7700.4a3d1e88929549c3a30806512520285a.index
+-rw-r--r-- 1 root root 26239 Mar 25 02:33 stream.08dc47ee7cb82800_08dc47f58abd7700.6c237a69c55a4ea0b5beea53449303d4.span
+-rw-r--r-- 1 root root  5140 Mar 25 02:30 stream.08dc4c73781ec400.899cf442a7f442c18f6c9ffdea4f28d9.tick
+-rw-r--r-- 1 root root  1624 Mar 25 02:34 stream.08dc4c74072bdc00.aeb40580f55c433b93f01dc6afd35514.tick
+-rw-r--r-- 1 root root  2377 Mar 25 02:35 stream.08dc4c743cd0c500.73c8fbd959b34f85b49980b7bed388bb.tick
+-rw-r--r-- 1 root root  8538 Mar 25 02:43 stream.2.metadata
+-rw-r--r-- 1 root root   973 Mar 11 06:44 stream.collection.d4b3bf22938947b3862d2b4f8b44c6ae.docc
+-rw-r--r-- 1 root root     8 Mar 11 06:34 stream.flare
+```
