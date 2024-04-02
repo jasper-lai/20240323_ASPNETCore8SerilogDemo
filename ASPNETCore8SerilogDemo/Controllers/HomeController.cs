@@ -24,6 +24,7 @@ namespace ASPNETCore8SerilogDemo.Controllers
         public IActionResult Index()
         {
             //_logger.LogInformation("ASPNETCore8SerilogDemo­º­¶");
+            HttpContext.Session.SetString("UserId", "user001");
             _loggingService.LogInformation("ASPNETCore8SerilogDemo­º­¶");
             return View();
         }

@@ -115,6 +115,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton(typeof(ILoggingService<>), typeof(LoggingService<>));
 #endregion
 
+#region 註冊 Session 服務
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // Set a long timeout for testing.
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+#endregion
+
 #region 註冊專案相關的 services
 builder.Services.AddScoped<IProductService, ProductService>();
 #endregion
@@ -146,11 +155,15 @@ app.UseRouting();
 //app.UseSerilogRequestLogging(); // <-- Add this line
 //#endregion
 
-#region 註冊自定義產出 TraceId 的 Middleware: TraceIdMiddleware
+#region 啟用 Session Middleware: 必須在使用 Session 的自定義 Middleware 之前
+app.UseSession();
+#endregion
+
+#region 啟用自定義產出 TraceId 的 Middleware: TraceIdMiddleware
 app.UseMiddleware<TraceIdMiddleware>();
 #endregion
 
-#region 註冊自定義例外攔截的 Middleware: ExceptionHandlingMiddleware
+#region 啟用自定義例外攔截的 Middleware: ExceptionHandlingMiddleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 #endregion
 

@@ -47,6 +47,7 @@
         }
         public async Task InvokeAsync(HttpContext context)
         {
+            var userId = string.Empty;
             try
             {
                 LogRequest(context);
@@ -173,7 +174,8 @@
             response.TraceId = traceId;
             response.ControllerName = controllerName ?? string.Empty;
             response.ActionName = actionName ?? string.Empty;
-            response.UserId = "jasper";
+            var userId = context.Session.GetString("UserId");
+            response.UserId = userId;
 
             // STEP 3: 設定回傳的 response header
             context.Response.ContentType = "application/json";

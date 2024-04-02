@@ -46,6 +46,7 @@
         [HttpGet]
         public IActionResult Create()
         {
+            HttpContext.Session.SetString("UserId", "user002");
             var product = new ProductViewModel() { Id = 1, Name = "豆塔", OrderQty = 1, UnitPrice = 30 };
             return View(product);
         }
